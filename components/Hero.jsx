@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import Button from './Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiArrowRight,
@@ -208,22 +209,16 @@ export default function Hero({ courses = DEFAULT_HERO_COURSES }) {
 
                 {/* Consistent CTAs across all slides */}
                 <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-3.5">
-                  <Link
-                    href="/courses"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-xs lg:text-sm font-black text-slate-950 rounded-xl bg-sky-400 hover:bg-sky-300 active:scale-95 shadow-lg shadow-sky-400/25 transition-all duration-200 cursor-pointer"
-                  >
+                  <Button href="/courses" variant="primary">
                     <FiBookOpen className="text-base" />
                     <span>Explore Courses</span>
                     <FiArrowRight className="text-sm" />
-                  </Link>
+                  </Button>
 
-                  <Link
-                    href="/courses"
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-xs lg:text-sm font-black rounded-xl border border-slate-300 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 text-slate-900 dark:text-slate-100 hover:border-sky-400 dark:hover:border-sky-400 hover:text-sky-600 dark:hover:text-sky-300 active:scale-95 shadow-xs backdrop-blur-md transition-all duration-200 cursor-pointer"
-                  >
+                  <Button href="/courses" variant="secondary">
                     <FiCheckCircle className="text-base text-emerald-500" />
                     <span>View Curriculum</span>
-                  </Link>
+                  </Button>
                 </div>
               </div>
             </div>
