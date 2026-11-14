@@ -1,6 +1,7 @@
 import Hero from "@/components/Hero";
 import FeaturedCoursesSection from "@/components/FeaturedCoursesSection";
 import LearningPathwaysSection from "@/components/LearningPathwaysSection";
+import ExperienceSection from "@/components/ExperienceSection";
 
 export default function Home() {
   return (
@@ -8,6 +9,7 @@ export default function Home() {
       <Hero />
       <FeaturedCoursesSection />
       <LearningPathwaysSection />
+      <ExperienceSection />
     </div>
   );
 }
