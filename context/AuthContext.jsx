@@ -19,23 +19,43 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Load token and user from localStorage on mount
+  // Load token and user from localStorage on mount & sync latest profile
   useEffect(() => {
-    try {
-      const storedToken = localStorage.getItem('datapollex_auth_token');
-      const storedUser = localStorage.getItem('datapollex_auth_user');
+    const initializeAuth = async () => {
+      try {
+        const storedToken = localStorage.getItem('datapollex_auth_token');
+        const storedUser = localStorage.getItem('datapollex_auth_user');
 
-      if (storedToken) {
-        setToken(storedToken);
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+        if (storedToken) {
+          setToken(storedToken);
+          if (storedUser) {
+            setUser(JSON.parse(storedUser));
+          }
+
+          // Fetch fresh profile from backend
+          try {
+            const res = await fetch('http://localhost:5000/api/auth/me', {
+              headers: {
+                Authorization: `Bearer ${storedToken}`,
+              },
+            });
+            const data = await res.json();
+            if (res.ok && data.success && data.user) {
+              setUser(data.user);
+              localStorage.setItem('datapollex_auth_user', JSON.stringify(data.user));
+            }
+          } catch (fetchErr) {
+            // Keep localStorage fallback
+          }
         }
+      } catch (e) {
+        console.error('Error reading auth state from localStorage:', e);
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      console.error('Error reading auth state from localStorage:', e);
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (email, password) => {
@@ -125,6 +145,40 @@ export function AuthProvider({ children }) {
     router.push('/login');
   };
 
+  const saveProgress = async (progressData) => {
+    try {
+      if (user) {
+        const updatedUser = {
+          ...user,
+          lastProgress: {
+            ...progressData,
+            updatedAt: new Date().toISOString(),
+          },
+        };
+        setUser(updatedUser);
+        localStorage.setItem('datapollex_auth_user', JSON.stringify(updatedUser));
+      }
+
+      const storageKey = user?.email
+        ? `datapollex_progress_${user.email}`
+        : 'datapollex_progress_guest';
+      localStorage.setItem(storageKey, JSON.stringify(progressData));
+
+      if (token) {
+        await fetch('http://localhost:5000/api/auth/progress', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(progressData),
+        });
+      }
+    } catch (err) {
+      console.error('Failed to sync progress:', err);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -134,6 +188,7 @@ export function AuthProvider({ children }) {
         login,
         register,
         logout,
+        saveProgress,
         isAuthenticated: Boolean(token),
       }}
     >

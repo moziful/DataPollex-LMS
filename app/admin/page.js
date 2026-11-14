@@ -68,6 +68,10 @@ export default function AdminDashboardPage() {
   const [lectureSubmitting, setLectureSubmitting] = useState(false);
   const [lectureError, setLectureError] = useState(null);
 
+  // Delete Lecture Confirmation Modal state
+  const [deletingLecture, setDeletingLecture] = useState(null);
+  const [deleteLectureSubmitting, setDeleteLectureSubmitting] = useState(false);
+
   // Fetch all courses
   const fetchCourses = async () => {
     try {
@@ -302,11 +306,12 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Delete Lecture
-  const handleDeleteLecture = async (lectureId) => {
-    if (!confirm('Are you sure you want to delete this lecture?')) return;
+  // Confirm Delete Lecture via Customized Modal
+  const confirmDeleteLecture = async () => {
+    if (!deletingLecture) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/lectures/${lectureId}`, {
+      setDeleteLectureSubmitting(true);
+      const res = await fetch(`http://localhost:5000/api/lectures/${deletingLecture._id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -314,6 +319,7 @@ export default function AdminDashboardPage() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        setDeletingLecture(null);
         openLectureManager(managingCourse);
         fetchCourses();
       } else {
@@ -321,6 +327,8 @@ export default function AdminDashboardPage() {
       }
     } catch (err) {
       alert('Error deleting lecture');
+    } finally {
+      setDeleteLectureSubmitting(false);
     }
   };
 

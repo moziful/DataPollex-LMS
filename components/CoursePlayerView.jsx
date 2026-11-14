@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,8 +23,11 @@ import {
 import { HiSparkles } from 'react-icons/hi2';
 import Button from '@/components/Button';
 import { formatVideoEmbedUrl, formatPrice } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 
 export default function CoursePlayerView({ courseId }) {
+  const searchParams = useSearchParams();
+  const { user, saveProgress } = useAuth();
   const [course, setCourse] = useState(null);
   const [activeLectureIndex, setActiveLectureIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -44,8 +48,45 @@ export default function CoursePlayerView({ courseId }) {
         if (!isMounted) return;
 
         if (res.ok && data?.success && data?.data) {
-          setCourse(data.data);
-          setActiveLectureIndex(0);
+          const loadedCourse = data.data;
+          setCourse(loadedCourse);
+
+          const sorted = [...(loadedCourse.lectures || [])].sort((a, b) =>
+            (a.title || '').localeCompare(b.title || '', undefined, { numeric: true, sensitivity: 'base' })
+          );
+
+          // Determine initial active lecture (from URL query or student's saved continuation)
+          const targetLectureId = searchParams?.get('lectureId');
+          const targetLectureIndex = searchParams?.get('lecture');
+
+          let initialIndex = 0;
+          if (targetLectureId) {
+            const foundIdx = sorted.findIndex((l) => l._id === targetLectureId);
+            if (foundIdx !== -1) initialIndex = foundIdx;
+          } else if (targetLectureIndex !== null && !isNaN(Number(targetLectureIndex))) {
+            const num = Number(targetLectureIndex);
+            if (num >= 0 && num < sorted.length) initialIndex = num;
+          } else {
+            // Check student saved progress for this course
+            const savedStudentProgress = user?.lastProgress;
+            if (savedStudentProgress?.courseId === loadedCourse._id && savedStudentProgress?.lectureId) {
+              const foundSavedIdx = sorted.findIndex((l) => l._id === savedStudentProgress.lectureId);
+              if (foundSavedIdx !== -1) initialIndex = foundSavedIdx;
+            } else {
+              try {
+                const localKey = user?.email
+                  ? `datapollex_progress_${user.email}`
+                  : 'datapollex_progress_guest';
+                const localData = JSON.parse(localStorage.getItem(localKey) || '{}');
+                if (localData?.courseId === loadedCourse._id && localData?.lectureId) {
+                  const foundLocalIdx = sorted.findIndex((l) => l._id === localData.lectureId);
+                  if (foundLocalIdx !== -1) initialIndex = foundLocalIdx;
+                }
+              } catch (e) {}
+            }
+          }
+
+          setActiveLectureIndex(initialIndex);
         } else {
           setError(data?.message || 'Course not found or unavailable');
         }
@@ -64,7 +105,29 @@ export default function CoursePlayerView({ courseId }) {
     return () => {
       isMounted = false;
     };
-  }, [courseId]);
+  }, [courseId, searchParams, user?.lastProgress?.courseId, user?.lastProgress?.lectureId]);
+
+  const rawLectures = course?.lectures || [];
+  const lectures = [...rawLectures].sort((a, b) =>
+    (a.title || '').localeCompare(b.title || '', undefined, { numeric: true, sensitivity: 'base' })
+  );
+  const hasLectures = lectures.length > 0;
+  const activeLecture = hasLectures ? lectures[activeLectureIndex] : null;
+
+  // Auto-record progress when active lecture changes
+  useEffect(() => {
+    if (course && activeLecture) {
+      saveProgress?.({
+        courseId: course._id,
+        courseTitle: course.title,
+        courseThumbnail: course.thumbnailUrl,
+        lectureId: activeLecture._id,
+        lectureTitle: activeLecture.title,
+        lectureIndex: activeLectureIndex,
+        totalLectures: lectures.length,
+      });
+    }
+  }, [course?._id, activeLecture?._id, activeLectureIndex, lectures.length]);
 
   const handleShare = () => {
     if (typeof window !== 'undefined') {
@@ -73,13 +136,6 @@ export default function CoursePlayerView({ courseId }) {
       setTimeout(() => setCopied(false), 2000);
     }
   };
-
-  const rawLectures = course?.lectures || [];
-  const lectures = [...rawLectures].sort((a, b) =>
-    (a.title || '').localeCompare(b.title || '', undefined, { numeric: true, sensitivity: 'base' })
-  );
-  const hasLectures = lectures.length > 0;
-  const activeLecture = hasLectures ? lectures[activeLectureIndex] : null;
 
   const handleNext = () => {
     if (activeLectureIndex < lectures.length - 1) {
