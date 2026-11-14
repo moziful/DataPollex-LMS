@@ -7,6 +7,20 @@ import { HiSparkles } from 'react-icons/hi2';
 import SectionHeader from '@/components/SectionHeader';
 import CourseCard, { CourseCardSkeleton } from '@/components/CourseCard';
 import Button from '@/components/Button';
+import CustomSelect from '@/components/CustomSelect';
+
+const PRICE_OPTIONS = [
+  { value: 'all', label: 'All Pricing' },
+  { value: 'free', label: 'Free Only' },
+  { value: 'paid', label: 'Paid Bootcamps' },
+];
+
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Sort: Newest First' },
+  { value: 'price-asc', label: 'Price: Low to High' },
+  { value: 'price-desc', label: 'Price: High to Low' },
+  { value: 'lessons', label: 'Most Video Lessons' },
+];
 
 const CATEGORIES = [
   { id: 'all', label: 'All Courses' },
@@ -187,30 +201,19 @@ function CoursesPage() {
               )}
             </div>
 
-            {/* Dropdown Filters (Price & Sort) */}
+            {/* Dropdown Filters (Price & Sort) using CustomSelect */}
             <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-              {/* Price Filter */}
-              <select
+              <CustomSelect
                 value={priceFilter}
-                onChange={(e) => setPriceFilter(e.target.value)}
-                className="px-3.5 py-2.5 text-xs font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-sky-400 shadow-xs cursor-pointer"
-              >
-                <option value="all">All Pricing</option>
-                <option value="free">Free Only</option>
-                <option value="paid">Paid Bootcamps</option>
-              </select>
+                onChange={setPriceFilter}
+                options={PRICE_OPTIONS}
+              />
 
-              {/* Sorting Filter */}
-              <select
+              <CustomSelect
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3.5 py-2.5 text-xs font-bold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 focus:outline-hidden focus:border-sky-400 shadow-xs cursor-pointer"
-              >
-                <option value="newest">Sort: Newest First</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-                <option value="lessons">Most Video Lessons</option>
-              </select>
+                onChange={setSortBy}
+                options={SORT_OPTIONS}
+              />
 
               {/* Reset Filters Button */}
               {hasActiveFilters && (
