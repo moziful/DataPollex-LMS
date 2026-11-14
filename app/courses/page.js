@@ -288,7 +288,7 @@ function CoursesPage() {
           <div className="rounded-2xl border border-dashed border-red-300 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 p-12 text-center text-red-600 dark:text-red-400 space-y-3">
             <p className="font-black text-lg">Unable to connect to backend server</p>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
-              Please verify that the Express backend is running on port 5000 (`npm run dev` in lms-backend).
+              Please verify that the backend API is online or check your network connection.
             </p>
             <Button onClick={() => window.location.reload()} variant="primary" size="sm">
               Retry Connection
