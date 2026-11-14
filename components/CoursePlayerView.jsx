@@ -24,6 +24,7 @@ import { HiSparkles } from 'react-icons/hi2';
 import Button from '@/components/Button';
 import { formatVideoEmbedUrl, formatPrice } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { API_BASE_URL } from '@/lib/api';
 
 export default function CoursePlayerView({ courseId }) {
   const searchParams = useSearchParams();
@@ -42,7 +43,7 @@ export default function CoursePlayerView({ courseId }) {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(`http://localhost:5000/api/courses/${courseId}`);
+        const res = await fetch(`${API_BASE_URL}/courses/${courseId}`);
         const data = await res.json();
 
         if (!isMounted) return;

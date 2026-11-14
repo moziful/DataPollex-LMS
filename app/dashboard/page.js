@@ -25,6 +25,7 @@ import Button from '@/components/Button';
 import CourseCard, { CourseCardSkeleton } from '@/components/CourseCard';
 import { useAuth } from '@/context/AuthContext';
 import { formatPrice } from '@/lib/utils';
+import { API_BASE_URL } from '@/lib/api';
 
 export default function StudentDashboardPage() {
   const router = useRouter();
@@ -51,7 +52,7 @@ export default function StudentDashboardPage() {
       try {
         setLoadingCourses(true);
         setCoursesError(null);
-        const res = await fetch('http://localhost:5000/api/courses');
+        const res = await fetch(`${API_BASE_URL}/courses`);
         if (!res.ok) {
           throw new Error('Failed to fetch courses from backend');
         }
@@ -88,17 +89,17 @@ export default function StudentDashboardPage() {
         : 'datapollex_progress_guest';
       const stored = localStorage.getItem(storageKey);
       if (stored) return JSON.parse(stored);
-    } catch (e) {}
+    } catch (e) { }
     return null;
   })();
 
   // Find course matching current progress if available
   const continuedCourse = activeProgress
     ? courses.find((c) => c._id === activeProgress.courseId) || {
-        _id: activeProgress.courseId,
-        title: activeProgress.courseTitle || 'Active Course',
-        thumbnailUrl: activeProgress.courseThumbnail || '',
-      }
+      _id: activeProgress.courseId,
+      title: activeProgress.courseTitle || 'Active Course',
+      thumbnailUrl: activeProgress.courseThumbnail || '',
+    }
     : null;
 
   if (authLoading || (!mounted && !user)) {
@@ -114,9 +115,8 @@ export default function StudentDashboardPage() {
 
   const studentName = user?.name || (user?.email ? user.email.split('@')[0] : 'Student');
   const resumeUrl = activeProgress
-    ? `/courses/${activeProgress.courseId}${
-        activeProgress.lectureId ? `?lectureId=${activeProgress.lectureId}` : `?lecture=${activeProgress.lectureIndex ?? 0}`
-      }`
+    ? `/courses/${activeProgress.courseId}${activeProgress.lectureId ? `?lectureId=${activeProgress.lectureId}` : `?lecture=${activeProgress.lectureIndex ?? 0}`
+    }`
     : '/courses';
 
   return (

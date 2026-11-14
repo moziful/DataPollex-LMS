@@ -2,14 +2,15 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { API_BASE_URL } from '@/lib/api';
 
 const AuthContext = createContext({
   user: null,
   token: null,
   loading: true,
-  login: async () => {},
-  register: async () => {},
-  logout: () => {},
+  login: async () => { },
+  register: async () => { },
+  logout: () => { },
   isAuthenticated: false,
 });
 
@@ -34,33 +35,33 @@ export function AuthProvider({ children }) {
 
           // Fetch fresh profile from backend
           try {
-            const res = await fetch('http://localhost:5000/api/auth/me', {
-              headers: {
-                Authorization: `Bearer ${storedToken}`,
-              },
-            });
-            const data = await res.json();
-            if (res.ok && data.success && data.user) {
-              setUser(data.user);
-              localStorage.setItem('datapollex_auth_user', JSON.stringify(data.user));
-            }
-          } catch (fetchErr) {
-            // Keep localStorage fallback
+              const res = await fetch(`${API_BASE_URL}/auth/me`, {
+                headers: {
+                  Authorization: `Bearer ${storedToken}`,
+                },
+              });
+              const data = await res.json();
+              if(res.ok && data.success && data.user) {
+                setUser(data.user);
+            localStorage.setItem('datapollex_auth_user', JSON.stringify(data.user));
           }
+          } catch (fetchErr) {
+          // Keep localStorage fallback
         }
-      } catch (e) {
-        console.error('Error reading auth state from localStorage:', e);
-      } finally {
-        setLoading(false);
       }
-    };
+      } catch (e) {
+      console.error('Error reading auth state from localStorage:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    initializeAuth();
-  }, []);
+  initializeAuth();
+}, []);
 
-  const login = async (email, password) => {
-    try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
+const login = async (email, password) => {
+  try {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,36 +71,36 @@ export function AuthProvider({ children }) {
 
       const data = await res.json();
 
-      if (res.ok && data.success && data.token) {
+      if(res.ok && data.success && data.token) {
         const userData = data.user || {
           email,
           role: data.role || (email.toLowerCase().includes('admin') ? 'admin' : 'student'),
         };
 
-        setToken(data.token);
-        setUser(userData);
+    setToken(data.token);
+    setUser(userData);
 
-        localStorage.setItem('datapollex_auth_token', data.token);
-        localStorage.setItem('datapollex_auth_user', JSON.stringify(userData));
+    localStorage.setItem('datapollex_auth_token', data.token);
+    localStorage.setItem('datapollex_auth_user', JSON.stringify(userData));
 
-        return { success: true, user: userData };
-      } else {
-        return {
-          success: false,
-          message: data.message || 'Invalid email or password',
-        };
-      }
-    } catch (err) {
-      return {
-        success: false,
-        message: 'Unable to reach backend auth server. Please ensure backend is running.',
-      };
-    }
+    return { success: true, user: userData };
+  } else {
+    return {
+      success: false,
+      message: data.message || 'Invalid email or password',
+    };
+  }
+} catch (err) {
+  return {
+    success: false,
+    message: 'Unable to reach backend auth server. Please ensure backend is running.',
+  };
+}
   };
 
-  const register = async (name, email, password) => {
-    try {
-      const res = await fetch('http://localhost:5000/api/auth/register', {
+const register = async (name, email, password) => {
+  try {
+      const res = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,47 +110,47 @@ export function AuthProvider({ children }) {
 
       const data = await res.json();
 
-      if (res.ok && data.success && data.token) {
+      if(res.ok && data.success && data.token) {
         const userData = data.user || {
           name,
           email,
           role: 'student',
         };
 
-        setToken(data.token);
-        setUser(userData);
+    setToken(data.token);
+    setUser(userData);
 
-        localStorage.setItem('datapollex_auth_token', data.token);
-        localStorage.setItem('datapollex_auth_user', JSON.stringify(userData));
+    localStorage.setItem('datapollex_auth_token', data.token);
+    localStorage.setItem('datapollex_auth_user', JSON.stringify(userData));
 
-        return { success: true, user: userData };
-      } else {
-        return {
-          success: false,
-          message: data.message || 'Registration failed. Please check your details.',
-        };
-      }
-    } catch (err) {
-      return {
-        success: false,
-        message: 'Unable to reach backend registration server. Please ensure backend is running.',
-      };
-    }
+    return { success: true, user: userData };
+  } else {
+    return {
+      success: false,
+      message: data.message || 'Registration failed. Please check your details.',
+    };
+  }
+} catch (err) {
+  return {
+    success: false,
+    message: 'Unable to reach backend registration server. Please ensure backend is running.',
+  };
+}
   };
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('datapollex_auth_token');
-    localStorage.removeItem('datapollex_auth_user');
-    router.push('/login');
-  };
+const logout = () => {
+  setToken(null);
+  setUser(null);
+  localStorage.removeItem('datapollex_auth_token');
+  localStorage.removeItem('datapollex_auth_user');
+  router.push('/login');
+};
 
-  const updateUserProfile = async (name, avatar) => {
-    try {
-      if (!token) return { success: false, message: 'Not authenticated' };
+const updateUserProfile = async (name, avatar) => {
+  try {
+    if (!token) return { success: false, message: 'Not authenticated' };
 
-      const res = await fetch('http://localhost:5000/api/auth/profile', {
+      const res = await fetch(`${API_BASE_URL}/auth/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -159,39 +160,39 @@ export function AuthProvider({ children }) {
       });
 
       const data = await res.json();
-      if (res.ok && data.success && data.user) {
+      if(res.ok && data.success && data.user) {
         setUser(data.user);
-        localStorage.setItem('datapollex_auth_user', JSON.stringify(data.user));
-        return { success: true, message: data.message, user: data.user };
-      } else {
-        return { success: false, message: data.message || 'Failed to update profile' };
-      }
-    } catch (err) {
-      return { success: false, message: 'Network error connecting to backend' };
-    }
+    localStorage.setItem('datapollex_auth_user', JSON.stringify(data.user));
+    return { success: true, message: data.message, user: data.user };
+  } else {
+    return { success: false, message: data.message || 'Failed to update profile' };
+  }
+} catch (err) {
+  return { success: false, message: 'Network error connecting to backend' };
+}
   };
 
-  const saveProgress = async (progressData) => {
-    try {
-      if (user) {
-        const updatedUser = {
-          ...user,
-          lastProgress: {
-            ...progressData,
-            updatedAt: new Date().toISOString(),
-          },
-        };
-        setUser(updatedUser);
-        localStorage.setItem('datapollex_auth_user', JSON.stringify(updatedUser));
-      }
+const saveProgress = async (progressData) => {
+  try {
+    if (user) {
+      const updatedUser = {
+        ...user,
+        lastProgress: {
+          ...progressData,
+          updatedAt: new Date().toISOString(),
+        },
+      };
+      setUser(updatedUser);
+      localStorage.setItem('datapollex_auth_user', JSON.stringify(updatedUser));
+    }
 
-      const storageKey = user?.email
-        ? `datapollex_progress_${user.email}`
-        : 'datapollex_progress_guest';
-      localStorage.setItem(storageKey, JSON.stringify(progressData));
+    const storageKey = user?.email
+      ? `datapollex_progress_${user.email}`
+      : 'datapollex_progress_guest';
+    localStorage.setItem(storageKey, JSON.stringify(progressData));
 
-      if (token) {
-        await fetch('http://localhost:5000/api/auth/progress', {
+    if (token) {
+        await fetch(`${API_BASE_URL}/auth/progress`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

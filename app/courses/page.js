@@ -8,6 +8,7 @@ import SectionHeader from '@/components/SectionHeader';
 import CourseCard, { CourseCardSkeleton } from '@/components/CourseCard';
 import Button from '@/components/Button';
 import CustomSelect from '@/components/CustomSelect';
+import { API_BASE_URL } from '@/lib/api';
 
 const PRICE_OPTIONS = [
   { value: 'all', label: 'All Pricing' },
@@ -68,7 +69,7 @@ function CoursesPage() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch('http://localhost:5000/api/courses');
+        const res = await fetch(`${API_BASE_URL}/courses`);
         if (!res.ok) {
           throw new Error('Failed to fetch courses from server');
         }
