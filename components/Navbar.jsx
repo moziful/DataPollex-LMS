@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HiAcademicCap } from 'react-icons/hi2';
-import { FiSearch, FiMenu, FiX, FiArrowRight, FiBookOpen } from 'react-icons/fi';
+import { FiSearch, FiMenu, FiX, FiArrowRight, FiBookOpen, FiLogOut } from 'react-icons/fi';
 import ThemeToggle from './ThemeToggle';
+import { useAuth } from '@/context/AuthContext';
 
 const NAV_LINKS = [
   { name: 'Home', href: '/' },
@@ -18,6 +19,7 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { isAuthenticated, user, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -116,13 +118,32 @@ export default function Navbar() {
             {/* Theme Toggle */}
             <ThemeToggle />
 
-            {/* Admin Sign In */}
-            <Link
-              href="/login"
-              className="hidden sm:inline-flex items-center justify-center px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-sky-500 dark:hover:text-sky-400 transition-colors focus:outline-hidden"
-            >
-              Admin Login
-            </Link>
+            {/* Authentication Buttons */}
+            {isAuthenticated ? (
+              <div className="hidden sm:flex items-center gap-2">
+                <Link
+                  href={user?.role === 'admin' ? '/admin' : '/dashboard'}
+                  className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-xs font-bold border border-sky-400/40 bg-sky-400/10 text-sky-700 dark:text-sky-300 hover:bg-sky-400/20 transition-all"
+                >
+                  {user?.role === 'admin' ? 'Admin Panel' : 'Dashboard'}
+                </Link>
+                <button
+                  type="button"
+                  onClick={logout}
+                  title="Sign Out"
+                  className="p-2 rounded-lg text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 transition-colors cursor-pointer"
+                >
+                  <FiLogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden sm:inline-flex items-center justify-center px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-sky-500 dark:hover:text-sky-400 transition-colors focus:outline-hidden"
+              >
+                Sign In
+              </Link>
+            )}
 
             {/* CTA Explore Courses */}
             <Link
@@ -197,12 +218,31 @@ export default function Navbar() {
               </div>
 
               <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
-                <Link
-                  href="/login"
-                  className="w-full flex items-center justify-center py-2.5 px-4 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
-                >
-                  Admin Login
-                </Link>
+                {isAuthenticated ? (
+                  <>
+                    <Link
+                      href={user?.role === 'admin' ? '/admin' : '/dashboard'}
+                      className="w-full flex items-center justify-center py-2.5 px-4 rounded-xl text-xs font-bold text-sky-700 dark:text-sky-300 bg-sky-400/10 border border-sky-400/30 transition-colors"
+                    >
+                      {user?.role === 'admin' ? 'Admin Dashboard' : 'My Dashboard'}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={logout}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl text-xs font-bold text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors"
+                    >
+                      <FiLogOut className="w-3.5 h-3.5" />
+                      <span>Sign Out</span>
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="w-full flex items-center justify-center py-2.5 px-4 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                )}
                 <Link
                   href="/courses"
                   className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black text-slate-950 bg-sky-400 hover:bg-sky-300 shadow-md shadow-sky-400/20 transition-all"
