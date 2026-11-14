@@ -74,7 +74,13 @@ function CoursesPage() {
         }
         const data = await res.json();
         if (data.success && Array.isArray(data.data)) {
-          setCourses(data.data);
+          // Last added course first
+          const sorted = [...data.data].sort((a, b) => {
+            const dateDiff = new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+            if (dateDiff !== 0) return dateDiff;
+            return (b._id || '').localeCompare(a._id || '');
+          });
+          setCourses(sorted);
         }
       } catch (err) {
         console.error('Error fetching courses:', err.message);
@@ -125,8 +131,10 @@ function CoursesPage() {
         if (sortBy === 'price-asc') return (a.price ?? 0) - (b.price ?? 0);
         if (sortBy === 'price-desc') return (b.price ?? 0) - (a.price ?? 0);
         if (sortBy === 'lessons') return (b.lecturesCount ?? 0) - (a.lecturesCount ?? 0);
-        // Default: newest
-        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        // Default: newest (last added first)
+        const dateDiff = new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        if (dateDiff !== 0) return dateDiff;
+        return (b._id || '').localeCompare(a._id || '');
       });
   }, [courses, search, category, priceFilter, sortBy]);
 

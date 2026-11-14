@@ -22,7 +22,13 @@ export default function FeaturedCoursesSection() {
         }
         const data = await res.json();
         if (data.success && Array.isArray(data.data)) {
-          setCourses(data.data);
+          // Ensure last added course is loaded first
+          const sorted = [...data.data].sort((a, b) => {
+            const dateDiff = new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+            if (dateDiff !== 0) return dateDiff;
+            return (b._id || '').localeCompare(a._id || '');
+          });
+          setCourses(sorted);
         }
       } catch (err) {
         console.error('Error fetching courses:', err.message);
