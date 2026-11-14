@@ -1,21 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HiAcademicCap } from 'react-icons/hi2';
-import { FiSearch, FiMenu, FiX, FiArrowRight, FiBookOpen, FiLogOut } from 'react-icons/fi';
+import { HiAcademicCap, HiShieldCheck } from 'react-icons/hi2';
+import { FiMenu, FiX, FiArrowRight, FiBookOpen, FiLogOut } from 'react-icons/fi';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
-
-const NAV_LINKS = [
-  { name: 'Home', href: '/' },
-  { name: 'Courses', href: '/courses' },
-  { name: 'Bootcamp', href: '/bootcamp' },
-  { name: 'About', href: '/about' },
-  { name: 'Contact', href: '/contact' },
-];
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -23,11 +16,26 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const navLinks = [
+    { name: 'Home', href: '/' },
+    ...(mounted && isAuthenticated
+      ? user?.role === 'admin'
+        ? [{ name: 'Admin Panel', href: '/admin' }]
+        : [{ name: 'Dashboard', href: '/dashboard' }]
+      : []),
+    { name: 'Courses', href: '/courses' },
+    { name: 'About', href: '/about' },
+  ];
+
+  const userAvatar =
+    user?.avatar ||
+    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=160&q=80';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,6 +48,7 @@ export default function Navbar() {
 
   useEffect(() => {
     setMobileMenuOpen(false);
+    setIsProfileOpen(false);
   }, [pathname]);
 
   return (
@@ -74,7 +83,7 @@ export default function Navbar() {
 
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-1 lg:gap-2">
-            {NAV_LINKS.map((link) => {
+            {navLinks.map((link) => {
               const isActive =
                 pathname === link.href ||
                 (link.href !== '/' && pathname.startsWith(link.href));
@@ -83,7 +92,7 @@ export default function Navbar() {
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`relative px-3 py-2 text-xs lg:text-sm font-bold rounded-lg transition-colors duration-200 focus:outline-hidden ${isActive
+                  className={`relative px-3.5 py-2 text-xs lg:text-sm font-bold rounded-lg transition-colors duration-200 focus:outline-hidden ${isActive
                     ? 'text-sky-600 dark:text-sky-400'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-slate-800/60'
                     }`}
@@ -101,45 +110,97 @@ export default function Navbar() {
             })}
           </nav>
 
-          {/* Quick Search Box (Desktop) */}
-          <div className="hidden lg:flex items-center flex-1 max-w-xs mx-2">
-            <div className="relative w-full">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search courses..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-10 py-1.5 text-xs rounded-xl bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-sky-400/40 focus:border-sky-400 transition-all"
-              />
-              <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-slate-200/70 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                /
-              </kbd>
-            </div>
-          </div>
-
           {/* Right Action Buttons */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Subtle Divider */}
+            <div className="hidden sm:block w-px h-5 bg-slate-200 dark:bg-slate-800/80 mr-1" />
+
             {/* Theme Toggle */}
             <ThemeToggle />
 
-              {/* Authentication Buttons (Hydration-safe) */ }
+            {/* Authentication Section (Hydration-safe) */}
             {mounted && isAuthenticated ? (
-              <div className="hidden sm:flex items-center gap-2">
-                <Link
-                  href={user?.role === 'admin' ? '/admin' : '/dashboard'}
-                  className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-xs font-bold border border-sky-400/40 bg-sky-400/10 text-sky-700 dark:text-sky-300 hover:bg-sky-400/20 transition-all"
-                >
-                  {user?.role === 'admin' ? 'Admin Panel' : 'Dashboard'}
-                </Link>
+              <div
+                className="relative hidden sm:block"
+                onMouseEnter={() => setIsProfileOpen(true)}
+                onMouseLeave={() => setIsProfileOpen(false)}
+              >
+                {/* User Avatar + Name Trigger */}
                 <button
                   type="button"
-                  onClick={logout}
-                  title="Sign Out"
-                  className="p-2 rounded-lg text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 transition-colors cursor-pointer"
+                  onClick={() => setIsProfileOpen((prev) => !prev)}
+                  className="flex items-center gap-2.5 p-1 pr-3 rounded-full border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 hover:border-sky-400/50 dark:hover:border-sky-400/50 transition-all cursor-pointer shadow-xs focus:outline-hidden"
                 >
-                  <FiLogOut className="w-3.5 h-3.5" />
+                  <div className="relative w-8 h-8 rounded-full overflow-hidden ring-2 ring-sky-400/40 shrink-0">
+                    <Image
+                      src={userAvatar}
+                      alt={user?.name || 'User Profile'}
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
+                  </div>
+                  <span className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 max-w-[130px] truncate text-left">
+                    {user?.name || user?.email?.split('@')[0]}
+                  </span>
                 </button>
+
+                {/* Hover Profile Pop-up Modal */}
+                <AnimatePresence>
+                  {isProfileOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                      transition={{ duration: 0.16, ease: 'easeOut' }}
+                      className="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-slate-200 dark:border-slate-800/90 bg-white dark:bg-[#0c1322] p-4 shadow-2xl z-50 text-left"
+                    >
+                      {/* Name & Role Area (Clicking navigates to Profile page) */}
+                      <Link
+                        href="/profile"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="block rounded-xl p-2.5 -m-1 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 transition-colors group/profile cursor-pointer"
+                        title="Manage Profile & Settings"
+                      >
+                        <h4 className="text-sm font-black text-slate-900 dark:text-white group-hover/profile:text-sky-500 transition-colors truncate">
+                          {user?.name || (user?.role === 'admin' ? 'DataPollex Admin' : 'Student')}
+                        </h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5 font-medium">
+                          {user?.email}
+                        </p>
+                        <div className="mt-2.5">
+                          {user?.role === 'admin' ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wider uppercase border border-rose-500/30 bg-rose-500/10 text-rose-500 dark:text-rose-400">
+                              <HiShieldCheck className="w-3.5 h-3.5" />
+                              <span>ADMIN</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wider uppercase border border-sky-500/30 bg-sky-500/10 text-sky-600 dark:text-sky-400">
+                              <HiAcademicCap className="w-3.5 h-3.5" />
+                              <span>STUDENT</span>
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+
+                      {/* Divider */}
+                      <div className="h-px bg-slate-200/80 dark:bg-slate-800/80 my-3" />
+
+                      {/* Full-width Sign Out Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsProfileOpen(false);
+                          logout();
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-rose-500/20 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-black transition-all cursor-pointer"
+                      >
+                        <FiLogOut className="w-4 h-4" />
+                        <span>Sign Out</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             ) : (
               <Link
@@ -150,14 +211,16 @@ export default function Navbar() {
               </Link>
             )}
 
-            {/* CTA Explore Courses */}
-            <Link
-              href="/courses"
-              className="relative inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-black text-slate-950 rounded-lg bg-sky-400 hover:bg-sky-300 active:scale-95 shadow-md shadow-sky-400/20 transition-all duration-200 focus:outline-hidden"
-            >
-              <span>Explore</span>
-              <FiArrowRight className="w-3.5 h-3.5 hidden sm:inline-block" />
-            </Link>
+            {/* CTA Explore Courses (Hidden when signed in) */}
+            {mounted && !isAuthenticated && (
+              <Link
+                href="/courses"
+                className="relative inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-black text-slate-950 rounded-lg bg-sky-400 hover:bg-sky-300 active:scale-95 shadow-md shadow-sky-400/20 transition-all duration-200 focus:outline-hidden"
+              >
+                <span>Explore</span>
+                <FiArrowRight className="w-3.5 h-3.5 hidden sm:inline-block" />
+              </Link>
+            )}
 
             {/* Mobile Menu Button */}
             <button
@@ -187,19 +250,8 @@ export default function Navbar() {
             className="md:hidden overflow-hidden border-t border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl"
           >
             <div className="max-w-7xl mx-auto px-4 pt-3 pb-6 space-y-3">
-              <div className="relative w-full">
-                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search courses..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-sky-400/40"
-                />
-              </div>
-
-              <div className="flex flex-col space-y-1 pt-1">
-                {NAV_LINKS.map((link) => {
+              <div className="flex flex-col space-y-1">
+                {navLinks.map((link) => {
                   const isActive =
                     pathname === link.href ||
                     (link.href !== '/' && pathname.startsWith(link.href));
@@ -223,38 +275,64 @@ export default function Navbar() {
               </div>
 
               <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
-                  { mounted && isAuthenticated ? (
-                    <>
-                      <Link
-                        href={user?.role === 'admin' ? '/admin' : '/dashboard'}
-                        className="w-full flex items-center justify-center py-2.5 px-4 rounded-xl text-xs font-bold text-sky-700 dark:text-sky-300 bg-sky-400/10 border border-sky-400/30 transition-colors"
-                      >
-                        {user?.role === 'admin' ? 'Admin Dashboard' : 'My Dashboard'}
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={logout}
-                        className="w-full flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl text-xs font-bold text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors"
-                      >
-                        <FiLogOut className="w-3.5 h-3.5" />
-                        <span>Sign Out</span>
-                      </button>
-                    </>
-                  ) : (
+                {mounted && isAuthenticated ? (
+                  <>
+                    <Link
+                      href="/profile"
+                      className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-left"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="relative w-9 h-9 rounded-full overflow-hidden ring-2 ring-sky-400/40 shrink-0">
+                          <Image
+                            src={userAvatar}
+                            alt={user?.name || 'User'}
+                            fill
+                            unoptimized
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-black text-slate-900 dark:text-white truncate">
+                            {user?.name || 'User'}
+                          </p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                            {user?.email}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${user?.role === 'admin'
+                          ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+                          : 'bg-sky-500/10 text-sky-500 border border-sky-500/20'
+                        }`}>
+                        {user?.role === 'admin' ? 'ADMIN' : 'STUDENT'}
+                      </span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={logout}
+                      className="w-full flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl text-xs font-black text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 transition-colors"
+                    >
+                      <FiLogOut className="w-3.5 h-3.5" />
+                      <span>Sign Out</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
                     <Link
                       href="/login"
                       className="w-full flex items-center justify-center py-2.5 px-4 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
                     >
                       Sign In
                     </Link>
-                  )}
-                <Link
-                  href="/courses"
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black text-slate-950 bg-sky-400 hover:bg-sky-300 shadow-md shadow-sky-400/20 transition-all"
-                >
-                  <FiBookOpen className="w-4 h-4" />
-                  <span>Start Learning</span>
-                </Link>
+                    <Link
+                      href="/courses"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black text-slate-950 bg-sky-400 hover:bg-sky-300 shadow-md shadow-sky-400/20 transition-all"
+                    >
+                      <FiBookOpen className="w-4 h-4" />
+                      <span>Start Learning</span>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

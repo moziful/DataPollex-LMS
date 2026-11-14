@@ -145,6 +145,32 @@ export function AuthProvider({ children }) {
     router.push('/login');
   };
 
+  const updateUserProfile = async (name, avatar) => {
+    try {
+      if (!token) return { success: false, message: 'Not authenticated' };
+
+      const res = await fetch('http://localhost:5000/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name, avatar }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success && data.user) {
+        setUser(data.user);
+        localStorage.setItem('datapollex_auth_user', JSON.stringify(data.user));
+        return { success: true, message: data.message, user: data.user };
+      } else {
+        return { success: false, message: data.message || 'Failed to update profile' };
+      }
+    } catch (err) {
+      return { success: false, message: 'Network error connecting to backend' };
+    }
+  };
+
   const saveProgress = async (progressData) => {
     try {
       if (user) {
@@ -188,6 +214,7 @@ export function AuthProvider({ children }) {
         login,
         register,
         logout,
+        updateUserProfile,
         saveProgress,
         isAuthenticated: Boolean(token),
       }}
