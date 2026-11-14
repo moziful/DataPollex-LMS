@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { FaArrowRight } from 'react-icons/fa';
 import SectionHeader from './SectionHeader';
 import CourseCard, { CourseCardSkeleton } from './CourseCard';
+import { API_BASE_URL } from '@/lib/api';
 
 export default function FeaturedCoursesSection() {
   const [courses, setCourses] = useState([]);
@@ -16,7 +17,7 @@ export default function FeaturedCoursesSection() {
       try {
         setLoading(true);
         // Connect to Express backend API
-        const res = await fetch('http://localhost:5000/api/courses');
+        const res = await fetch(`${API_BASE_URL}/courses`);
         if (!res.ok) {
           throw new Error('Failed to fetch courses from server');
         }
