@@ -20,9 +20,14 @@ const NAV_LINKS = [
 export default function Navbar() {
   const pathname = usePathname();
   const { isAuthenticated, user, logout } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -118,8 +123,8 @@ export default function Navbar() {
             {/* Theme Toggle */}
             <ThemeToggle />
 
-            {/* Authentication Buttons */}
-            {isAuthenticated ? (
+              {/* Authentication Buttons (Hydration-safe) */ }
+            {mounted && isAuthenticated ? (
               <div className="hidden sm:flex items-center gap-2">
                 <Link
                   href={user?.role === 'admin' ? '/admin' : '/dashboard'}
@@ -218,31 +223,31 @@ export default function Navbar() {
               </div>
 
               <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
-                {isAuthenticated ? (
-                  <>
+                  { mounted && isAuthenticated ? (
+                    <>
+                      <Link
+                        href={user?.role === 'admin' ? '/admin' : '/dashboard'}
+                        className="w-full flex items-center justify-center py-2.5 px-4 rounded-xl text-xs font-bold text-sky-700 dark:text-sky-300 bg-sky-400/10 border border-sky-400/30 transition-colors"
+                      >
+                        {user?.role === 'admin' ? 'Admin Dashboard' : 'My Dashboard'}
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={logout}
+                        className="w-full flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl text-xs font-bold text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors"
+                      >
+                        <FiLogOut className="w-3.5 h-3.5" />
+                        <span>Sign Out</span>
+                      </button>
+                    </>
+                  ) : (
                     <Link
-                      href={user?.role === 'admin' ? '/admin' : '/dashboard'}
-                      className="w-full flex items-center justify-center py-2.5 px-4 rounded-xl text-xs font-bold text-sky-700 dark:text-sky-300 bg-sky-400/10 border border-sky-400/30 transition-colors"
+                      href="/login"
+                      className="w-full flex items-center justify-center py-2.5 px-4 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
                     >
-                      {user?.role === 'admin' ? 'Admin Dashboard' : 'My Dashboard'}
+                      Sign In
                     </Link>
-                    <button
-                      type="button"
-                      onClick={logout}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl text-xs font-bold text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors"
-                    >
-                      <FiLogOut className="w-3.5 h-3.5" />
-                      <span>Sign Out</span>
-                    </button>
-                  </>
-                ) : (
-                  <Link
-                    href="/login"
-                    className="w-full flex items-center justify-center py-2.5 px-4 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    Sign In
-                  </Link>
-                )}
+                  )}
                 <Link
                   href="/courses"
                   className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-black text-slate-950 bg-sky-400 hover:bg-sky-300 shadow-md shadow-sky-400/20 transition-all"
